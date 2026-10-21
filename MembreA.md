@@ -240,9 +240,9 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 - [ ] Exécuter `mvn clean test`.
 - [ ] Vérifier le démarrage avec MySQL/Testcontainers.
-- [ ] Vérifier les endpoints avec les rôles prévus.
-- [ ] Vérifier qu'aucun contrôleur n'expose une entité JPA.
-- [ ] Vérifier le format des erreurs `400`, `404` et `409`.
+- [x] Vérifier les endpoints avec les rôles prévus.
+- [x] Vérifier qu'aucun contrôleur n'expose une entité JPA.
+- [x] Vérifier le format des erreurs `400`, `404` et `409`.
 - [ ] Vérifier les endpoints Actuator et OpenAPI.
 - [ ] Vérifier l'absence de secrets et de fichiers temporaires.
 - [ ] Partager le socle avec le binôme après validation de l'étape 4.
@@ -388,3 +388,21 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - La configuration `FixedClockTestConfiguration` fournit désormais un bean `@Primary` basé sur `Clock.fixed(Instant.parse("2026-01-15T12:00:00Z"), ZoneOffset.UTC)`. Les tests MVC utilisent cette horloge pour rendre les timestamps d'erreur déterministes ; le bean `Clock.systemUTC()` reste utilisé en production.
 - Avec Spring Boot 4, les annotations de slice utilisent `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest` et `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest`, et non les anciens packages Spring Boot 3.
 - Les 5 tests MVC/Security ciblés passent. Les tests JPA et le test d'intégration compilent mais leur exécution est bloquée localement par l'absence d'un environnement Docker valide pour Testcontainers ; ils devront être rejoués avec Docker Desktop ou un daemon CI disponible.
+- Le contrôle des contrôleurs confirme qu'aucune entité JPA n'est utilisée comme paramètre ou retour REST ; seuls les records DTO sont exposés.
+- `.gitignore` ignore désormais `target/`, `.idea/` et `*.iml`. Des fichiers `.idea` sont toutefois déjà suivis dans l'index Git ; ils doivent être retirés de l'index par une commande Git exécutée par le responsable du dépôt avant la transmission.
+- Les cases runtime de l'Étape 12 restent volontairement non cochées : Docker est indisponible pour les migrations/Testcontainers et aucun démarrage réel n'a permis de vérifier `/actuator/health` et `/v3/api-docs`. Les configurations compilent et les tests MVC ciblés passent.
+
+### ✅ Bilan de transmission pour le Membre B
+
+- **Dépendances Maven disponibles** : Spring Boot WebMVC, Validation, Data JPA, Security, Flyway, Flyway MySQL, MySQL Connector/J, Actuator, Springdoc OpenAPI WebMVC UI 3.1.1, Spring Boot Test, WebMVC Test, Data JPA Test, Security Test, Spring Boot Testcontainers, Testcontainers MySQL et Testcontainers JUnit Jupiter. Le projet compile avec Java 25 et `maven.compiler.release=25`.
+- **Base de données et migrations** : MySQL uniquement, Flyway `V1__init_schema.sql` puis `V2__seed_data.sql`, Hibernate verrouillé sur `ddl-auto=validate`. H2 est interdit.
+- **Rôles et comptes de test** :
+  - `client1@campus.fr` / `password` → `ROLE_CLIENT`.
+  - `producteur` / `password` → `ROLE_PRODUCTEUR`.
+  - `admin` / `password` → `ROLE_ADMIN`.
+  - Ces comptes sont uniquement destinés au développement et aux tests ; les mots de passe devront être externalisés avant tout usage réel.
+- **Format d’erreur obligatoire** : utiliser `com.campus.common.error.ErrorResponse`, exactement composé de `timestamp`, `status`, `code`, `message` et `path`. Les exceptions `ResourceNotFoundException` et `BusinessConflictException` sont déjà converties par `GlobalExceptionHandler` en `404 RESSOURCE_INTROUVABLE` et `409 CONFLIT_METIER`. Les validations sont converties en `400 VALIDATION_ECHOUEE`; les erreurs de sécurité utilisent `NON_AUTHENTIFIE` (`401`) et `ACCES_REFUSE` (`403`).
+- **Concurrence sur les achats** : conserver et utiliser `ConcertRepository.findByIdForUpdate(Long id)` avec `@Lock(LockModeType.PESSIMISTIC_WRITE)`, avant le calcul des billets vendus et la création d’un achat, dans une même transaction.
+- **Horloge partagée** : injecter le bean `java.time.Clock` fourni par `com.campus.config.ClockConfiguration`; ne jamais appeler directement `LocalDateTime.now()`. Les tests peuvent utiliser la configuration `FixedClockTestConfiguration`.
+- **DTO et exposition API** : les contrôleurs Catalogue utilisent exclusivement des records DTO ; les entités JPA ne doivent jamais être utilisées comme paramètres ou valeurs de retour REST.
+- **État de validation** : le contrôle statique et les tests MVC ciblés sont passés. La validation complète MySQL/Testcontainers (`mvn clean test`) reste à exécuter sur une machine ou une CI disposant de Docker. Les fichiers `.idea` déjà suivis devront être retirés de l’index par le gestionnaire Git du projet ; `.gitignore` les ignore désormais pour les futurs ajouts, ainsi que `target/` et `*.iml`.

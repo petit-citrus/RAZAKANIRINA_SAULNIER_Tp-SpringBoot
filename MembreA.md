@@ -63,14 +63,14 @@ Le dépôt est actuellement un squelette Java :
   - [ ] `client`.
   - [ ] `fidelite`.
   - [ ] `achat`.
-- [ ] Respecter les packages d'entités validés :
-  - [ ] `com.campus.catalogue.artiste.Artiste`.
-  - [ ] `com.campus.catalogue.salle.Salle`.
-  - [ ] `com.campus.catalogue.concert.Concert`.
-  - [ ] `com.campus.client.Client`.
-  - [ ] `com.campus.fidelite.CarteFidelite`.
-  - [ ] `com.campus.achat.AchatBillets`.
-  - [ ] `Adresse` dans `com.campus.client`, en `@Embeddable`.
+- [x] Respecter les packages d'entités validés :
+  - [x] `com.campus.catalogue.artiste.Artiste`.
+  - [x] `com.campus.catalogue.salle.Salle`.
+  - [x] `com.campus.catalogue.concert.Concert`.
+  - [x] `com.campus.client.Client`.
+  - [x] `com.campus.fidelite.CarteFidelite`.
+  - [x] `com.campus.achat.AchatBillets`.
+  - [x] `Adresse` dans `com.campus.client`, en `@Embeddable`.
 - [ ] Séparer entités JPA, DTO, repositories, services et contrôleurs.
 - [ ] Utiliser des records Java pour tous les DTO REST entrants et sortants.
 - [ ] Ne jamais exposer directement une entité JPA.
@@ -78,28 +78,28 @@ Le dépôt est actuellement un squelette Java :
 
 ### 4. Construire le modèle JPA et la migration initiale
 
-- [ ] Créer `src/main/resources/db/migration/V1__init_schema.sql`.
-- [ ] Créer les tables `artiste`, `salle`, `concert`, `client`, `carte_fidelite` et `achat_billets`.
-- [ ] Définir les clés primaires et étrangères.
-- [ ] Définir les contraintes d'unicité :
-  - [ ] Nom de l'artiste.
-  - [ ] Email du client.
-  - [ ] Code d'achat.
-  - [ ] Couple nom/ville d'une salle.
-- [ ] Utiliser `DECIMAL(10,2)` pour les prix et montants.
-- [ ] Utiliser des types SQL compatibles avec `LocalDateTime`.
-- [ ] Utiliser `Long` auto-incrémenté pour tous les identifiants d'entités.
-- [ ] Ajouter les contraintes de capacité, quantité et prix.
-- [ ] Créer les entités JPA :
-  - [ ] `Artiste` : id, nom obligatoire et unique, genre musical.
-  - [ ] `Salle` : id, nom, ville, capacité de 50 à 50 000.
-  - [ ] `Concert` : id, titre, artiste obligatoire, salle obligatoire, date future, prix positif.
-  - [ ] `Client` : id, nom, email unique, adresse embarquée.
-  - [ ] `Adresse` : objet `@Embeddable` avec rue et ville.
-  - [ ] `CarteFidelite` : id, client, dates d'achat et d'expiration.
-  - [ ] `AchatBillets` : id, code unique, concert, client, quantité de 1 à 6, montant total, date de création.
-- [ ] Mapper les associations `ManyToOne` obligatoires.
-- [ ] Ajouter les validations Jakarta correspondantes.
+- [x] Créer `src/main/resources/db/migration/V1__init_schema.sql`.
+- [x] Créer les tables `artiste`, `salle`, `concert`, `client`, `carte_fidelite` et `achat_billets`.
+- [x] Définir les clés primaires et étrangères.
+- [x] Définir les contraintes d'unicité :
+  - [x] Nom de l'artiste.
+  - [x] Email du client.
+  - [x] Code d'achat.
+  - [x] Couple nom/ville d'une salle.
+- [x] Utiliser `DECIMAL(10,2)` pour les prix et montants.
+- [x] Utiliser des types SQL compatibles avec `LocalDateTime`.
+- [x] Utiliser `Long` auto-incrémenté pour tous les identifiants d'entités.
+- [x] Ajouter les contraintes de capacité, quantité et prix.
+- [x] Créer les entités JPA :
+  - [x] `Artiste` : id, nom obligatoire et unique, genre musical.
+  - [x] `Salle` : id, nom, ville, capacité de 50 à 50 000.
+  - [x] `Concert` : id, titre, artiste obligatoire, salle obligatoire, date future, prix positif.
+  - [x] `Client` : id, nom, email unique, adresse embarquée.
+  - [x] `Adresse` : objet `@Embeddable` avec rue et ville.
+  - [x] `CarteFidelite` : id, client, dates d'achat et d'expiration.
+  - [x] `AchatBillets` : id, code unique, concert, client, quantité de 1 à 6, montant total, date de création.
+- [x] Mapper les associations `ManyToOne` obligatoires.
+- [x] Ajouter les validations Jakarta correspondantes.
 - [ ] Vérifier que Hibernate accepte le schéma avec `ddl-auto=validate`.
 
 ## Socle commun partageable
@@ -373,6 +373,11 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - [ ] Vérifier que les six entités et `Adresse @Embeddable` correspondent exactement à Flyway.
 - [ ] Vérifier que les handlers MVC et Security produisent le même format JSON strict.
 - [ ] Vérifier que le build utilise `maven.compiler.release=25`.
+
+### ⚠️ Problèmes rencontrés
+
+- La compilation `mvn test` confirme la cohérence Java des neuf classes et l'inclusion de la migration, mais aucune base MySQL/Testcontainers n'est encore configurée pour cette étape. La validation effective de `ddl-auto=validate`, l'exécution de `V1__init_schema.sql` et le support des contraintes `CHECK` restent donc à confirmer lors du prochain test d'intégration MySQL.
+- La migration utilise les contraintes `CHECK` natives MySQL ; l'environnement de validation devra utiliser une version MySQL qui les applique effectivement (MySQL 8.0.16 ou supérieure).
 
 ### ⚠️ Problèmes rencontrés
 

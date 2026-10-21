@@ -180,23 +180,23 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 9. Configurer Spring Security
 
-- [ ] Configurer l'authentification HTTP Basic.
-- [ ] Déclarer un `BCryptPasswordEncoder`.
-- [ ] Déclarer trois comptes de démonstration : `CLIENT`, `PRODUCTEUR` et `ADMIN`.
-- [ ] Autoriser publiquement :
-  - [ ] `GET /api/concerts/**`.
-  - [ ] `POST /api/clients`.
-  - [ ] `/actuator/health`.
-  - [ ] `/v3/api-docs/**`.
-  - [ ] `/swagger-ui/**`.
-- [ ] Autoriser `PRODUCTEUR` ou `ADMIN` sur :
-  - [ ] `POST /api/production/artistes`.
-  - [ ] `POST /api/production/concerts`.
-- [ ] Autoriser `ADMIN` sur `POST /api/admin/salles`.
-- [ ] Autoriser `CLIENT` ou `ADMIN` sur `POST /api/clients/{id}/carte-fidelite`.
-- [ ] Autoriser `CLIENT` sur `POST /api/achats`.
-- [ ] Vérifier `401` pour un anonyme sur route protégée.
-- [ ] Vérifier `403` lorsqu'un rôle authentifié est insuffisant.
+- [x] Configurer l'authentification HTTP Basic.
+- [x] Déclarer un `BCryptPasswordEncoder`.
+- [x] Déclarer trois comptes de démonstration : `CLIENT`, `PRODUCTEUR` et `ADMIN`.
+- [x] Autoriser publiquement :
+  - [x] `GET /api/concerts/**`.
+  - [x] `POST /api/clients`.
+  - [x] `/actuator/health`.
+  - [x] `/v3/api-docs/**`.
+  - [x] `/swagger-ui/**`.
+- [x] Autoriser `PRODUCTEUR` ou `ADMIN` sur :
+  - [x] `POST /api/production/artistes`.
+  - [x] `POST /api/production/concerts`.
+- [x] Autoriser `ADMIN` sur `POST /api/admin/salles`.
+- [x] Autoriser `CLIENT` ou `ADMIN` sur `POST /api/clients/{id}/carte-fidelite`.
+- [x] Autoriser `CLIENT` sur `POST /api/achats`.
+- [x] Vérifier `401` pour un anonyme sur route protégée.
+- [x] Vérifier `403` lorsqu'un rôle authentifié est insuffisant.
 
 ### 10. Configurer Actuator et OpenAPI
 
@@ -383,3 +383,4 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - Les exceptions métier utilisées par l'Étape 7 sont `com.campus.common.error.BusinessConflictException` pour les doublons d'artistes et de salles, et `com.campus.common.error.ResourceNotFoundException` pour un artiste, une salle ou un concert inexistant. L'Étape 8 devra les mapper respectivement en `409` et `404` dans le `ControllerAdvice`.
 - Le calcul des places restantes est effectué dans `ConcertService` à partir de la capacité de la salle et de `AchatBilletsRepository.sommeQuantiteVendueParConcert`; la transaction de lecture est distincte du futur flux transactionnel d'achat.
 - Le `GlobalExceptionHandler` ne couvre pas les réponses `401 Unauthorized` et `403 Forbidden` générées avant l'appel d'un contrôleur. Un `AuthenticationEntryPoint` et un `AccessDeniedHandler` devront produire le même format `ErrorResponse` lors de l'Étape 9 Spring Security.
+- Les comptes HTTP Basic sont des comptes de démonstration en mémoire et utilisent tous le mot de passe `password`, encodé par BCrypt à chaque démarrage. Cette valeur est exclusivement destinée au développement et aux tests ; elle devra être externalisée ou remplacée avant toute utilisation hors environnement de démonstration.

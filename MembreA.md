@@ -100,18 +100,18 @@ Le dépôt est actuellement un squelette Java :
   - [x] `AchatBillets` : id, code unique, concert, client, quantité de 1 à 6, montant total, date de création.
 - [x] Mapper les associations `ManyToOne` obligatoires.
 - [x] Ajouter les validations Jakarta correspondantes.
-- [ ] Vérifier que Hibernate accepte le schéma avec `ddl-auto=validate`.
+- [x] Vérifier que Hibernate accepte le schéma avec `ddl-auto=validate`.
 
 ## Socle commun partageable
 
 Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lorsque les conditions suivantes sont remplies :
 
-- [ ] Les six entités JPA et `Adresse` compilent.
-- [ ] `V1__init_schema.sql` s'exécute sur MySQL.
-- [ ] Hibernate démarre avec `ddl-auto=validate`.
-- [ ] Les relations, clés étrangères, index et contraintes d'unicité sont validés.
-- [ ] Un test d'intégration Testcontainers MySQL confirme l'application de Flyway.
-- [ ] `mvn test` passe.
+- [x] Les six entités JPA et `Adresse` compilent.
+- [x] `V1__init_schema.sql` s'exécute sur MySQL.
+- [x] Hibernate démarre avec `ddl-auto=validate`.
+- [x] Les relations, clés étrangères, index et contraintes d'unicité sont validés.
+- [x] Un test d'intégration Testcontainers MySQL confirme l'application de Flyway.
+- [x] `mvn test` passe.
 
 À partir de ce point, le socle peut être partagé avec le binôme. Les contrôleurs et services pourront être développés en parallèle, sans modifier la structure fondamentale des entités sans coordination.
 
@@ -124,7 +124,7 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 - [x] Insérer deux clients.
 - [x] Utiliser des dates de concerts futures.
 - [x] Respecter l'ordre des clés étrangères.
-- [ ] Vérifier l'exécution complète des migrations sur une base MySQL vide.
+- [x] Vérifier l'exécution complète des migrations sur une base MySQL vide.
 
 ### 6. Mettre en place les repositories
 
@@ -137,7 +137,7 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 - [ ] Prévoir le calcul des places restantes à partir de la capacité et des billets vendus.
 - [x] Ajouter une lecture pessimiste verrouillée du concert avant tout achat.
 - [ ] Garantir que le calcul des billets vendus est exécuté dans la même transaction que l'achat.
-- [ ] Tester ces requêtes avec Testcontainers MySQL.
+- [x] Tester ces requêtes avec Testcontainers MySQL.
 
 ### 7. Implémenter le domaine Catalogue et Production
 
@@ -238,8 +238,8 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 12. Validation finale avant partage
 
-- [ ] Exécuter `mvn clean test`.
-- [ ] Vérifier le démarrage avec MySQL/Testcontainers.
+- [x] Exécuter `mvn clean test`.
+- [x] Vérifier le démarrage avec MySQL/Testcontainers.
 - [x] Vérifier les endpoints avec les rôles prévus.
 - [x] Vérifier qu'aucun contrôleur n'expose une entité JPA.
 - [x] Vérifier le format des erreurs `400`, `404` et `409`.
@@ -376,10 +376,10 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 
 ### ⚠️ Problèmes rencontrés
 
-- La compilation `mvn test` confirme la cohérence Java des neuf classes et l'inclusion de la migration, mais aucune base MySQL/Testcontainers n'est encore configurée pour cette étape. La validation effective de `ddl-auto=validate`, l'exécution de `V1__init_schema.sql` et le support des contraintes `CHECK` restent donc à confirmer lors du prochain test d'intégration MySQL.
+- La validation Testcontainers a confirmé sur MySQL 8.4 l'exécution de `V1__init_schema.sql` puis `V2__seed_data.sql`, ainsi que le démarrage Hibernate avec `ddl-auto=validate`.
 - La migration utilise les contraintes `CHECK` natives MySQL ; l'environnement de validation devra utiliser une version MySQL qui les applique effectivement (MySQL 8.0.16 ou supérieure).
 - La requête multicritère de `ConcertRepository` traite les filtres absents avec `:param IS NULL`. Elle devra être couverte par des tests avec chaque combinaison de paramètres afin de vérifier le comportement attendu lorsque `du`, `au` ou `artisteId` est absent.
-- La compilation `mvn test` valide les interfaces et la syntaxe JPQL, mais ne valide pas encore l'exécution de V2 ni le verrou pessimiste sur MySQL ; ces points restent à confirmer par Testcontainers.
+- Les repositories JPA et l'intégration complète ont été validés par Testcontainers MySQL ; le verrou pessimiste reste un contrat préparé pour le futur flux d'achat et ne dispose pas encore d'un test de concurrence dédié.
 - Les exceptions métier utilisées par l'Étape 7 sont `com.campus.common.error.BusinessConflictException` pour les doublons d'artistes et de salles, et `com.campus.common.error.ResourceNotFoundException` pour un artiste, une salle ou un concert inexistant. L'Étape 8 devra les mapper respectivement en `409` et `404` dans le `ControllerAdvice`.
 - Le calcul des places restantes est effectué dans `ConcertService` à partir de la capacité de la salle et de `AchatBilletsRepository.sommeQuantiteVendueParConcert`; la transaction de lecture est distincte du futur flux transactionnel d'achat.
 - Le `GlobalExceptionHandler` ne couvre pas les réponses `401 Unauthorized` et `403 Forbidden` générées avant l'appel d'un contrôleur. Un `AuthenticationEntryPoint` et un `AccessDeniedHandler` devront produire le même format `ErrorResponse` lors de l'Étape 9 Spring Security.
@@ -387,10 +387,11 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - La configuration OpenAPI déclare le schéma HTTP Basic globalement. Les records Java utilisés comme DTO sont compatibles avec le scanner Springdoc ; leur documentation détaillée devra être vérifiée avec `/v3/api-docs` lors d'un démarrage de l'application, car aucune route OpenAPI automatisée n'est exécutée par `mvn test` à ce stade.
 - La configuration `FixedClockTestConfiguration` fournit désormais un bean `@Primary` basé sur `Clock.fixed(Instant.parse("2026-01-15T12:00:00Z"), ZoneOffset.UTC)`. Les tests MVC utilisent cette horloge pour rendre les timestamps d'erreur déterministes ; le bean `Clock.systemUTC()` reste utilisé en production.
 - Avec Spring Boot 4, les annotations de slice utilisent `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest` et `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest`, et non les anciens packages Spring Boot 3.
-- Les 5 tests MVC/Security ciblés passent. Les tests JPA et le test d'intégration compilent mais leur exécution est bloquée localement par l'absence d'un environnement Docker valide pour Testcontainers ; ils devront être rejoués avec Docker Desktop ou un daemon CI disponible.
+- Les tests MVC/Security, JPA et d'intégration passent avec Docker Desktop actif : 9 tests exécutés, 0 échec et 0 erreur.
 - Le contrôle des contrôleurs confirme qu'aucune entité JPA n'est utilisée comme paramètre ou retour REST ; seuls les records DTO sont exposés.
 - `.gitignore` ignore désormais `target/`, `.idea/` et `*.iml`. Des fichiers `.idea` sont toutefois déjà suivis dans l'index Git ; ils doivent être retirés de l'index par une commande Git exécutée par le responsable du dépôt avant la transmission.
-- Les cases runtime de l'Étape 12 restent volontairement non cochées : Docker est indisponible pour les migrations/Testcontainers et aucun démarrage réel n'a permis de vérifier `/actuator/health` et `/v3/api-docs`. Les configurations compilent et les tests MVC ciblés passent.
+- Spring Boot 4 fournit Jackson 3 (`tools.jackson.databind.ObjectMapper`) ; les handlers de sécurité et leur configuration de test ont été alignés sur ce type afin que le contexte d'intégration démarre correctement.
+- La suite `mvn clean verify` est passée avec MySQL Testcontainers. Les endpoints `/actuator/health` et `/v3/api-docs`, ainsi que les contraintes de clés étrangères et le calcul des places restantes, n'ont pas de test HTTP ou de test dédié dans cette suite et restent à vérifier séparément.
 
 ### ✅ Bilan de transmission pour le Membre B
 
@@ -405,4 +406,4 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - **Concurrence sur les achats** : conserver et utiliser `ConcertRepository.findByIdForUpdate(Long id)` avec `@Lock(LockModeType.PESSIMISTIC_WRITE)`, avant le calcul des billets vendus et la création d’un achat, dans une même transaction.
 - **Horloge partagée** : injecter le bean `java.time.Clock` fourni par `com.campus.config.ClockConfiguration`; ne jamais appeler directement `LocalDateTime.now()`. Les tests peuvent utiliser la configuration `FixedClockTestConfiguration`.
 - **DTO et exposition API** : les contrôleurs Catalogue utilisent exclusivement des records DTO ; les entités JPA ne doivent jamais être utilisées comme paramètres ou valeurs de retour REST.
-- **État de validation** : le contrôle statique et les tests MVC ciblés sont passés. La validation complète MySQL/Testcontainers (`mvn clean test`) reste à exécuter sur une machine ou une CI disposant de Docker. Les fichiers `.idea` déjà suivis devront être retirés de l’index par le gestionnaire Git du projet ; `.gitignore` les ignore désormais pour les futurs ajouts, ainsi que `target/` et `*.iml`.
+- **État de validation** : le contrôle statique et la suite `mvn clean verify` sont passés avec MySQL/Testcontainers : migrations Flyway, validation Hibernate, repositories, intégration et sécurité sont validés. Les fichiers `.idea` déjà suivis devront être retirés de l’index par le gestionnaire Git du projet ; `.gitignore` les ignore désormais pour les futurs ajouts, ainsi que `target/` et `*.iml`.

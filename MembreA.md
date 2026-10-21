@@ -236,3 +236,71 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 - [ ] Vérifier l'absence de secrets et de fichiers temporaires.
 - [ ] Partager le socle avec le binôme après validation de l'étape 4.
 - [ ] Partager la version fonctionnelle complète après validation des étapes 7 à 11.
+
+## Garde-fous obligatoires — vulnérabilités et solutions préventives
+
+### Étape 1 — Socle Maven, Java 25 et absence de Lombok
+
+- **Vulnérabilité — compilation Java incohérente** : `source` et `target` seuls ne garantissent pas une API Java cohérente et peuvent laisser diverger le JDK local et celui de la CI.
+  - **Solution** : remplacer ces propriétés par `<maven.compiler.release>25</maven.compiler.release>`, imposer un JDK 25 réel et vérifier que le Maven Compiler Plugin résolu supporte Java 25.
+- **Vulnérabilité — versions incompatibles** : redéfinir les versions gérées par Spring Boot peut produire un ensemble Spring incohérent.
+  - **Solution** : utiliser le parent Spring Boot 4.1.1, laisser le parent/BOM gérer les versions et contrôler la résolution avec `mvn dependency:tree`.
+- **Vulnérabilité — incompatibilité Springdoc** : `springdoc-openapi-starter-webmvc-ui:3.1.1` peut ne pas être compatible avec Spring Boot 4.1.1.
+  - **Solution** : vérifier sa matrice de compatibilité avant intégration et confirmer le démarrage effectif de l'application.
+- **Vulnérabilité — contrat JPA incomplet sans Lombok** : l'absence de génération automatique peut provoquer des erreurs de persistance ou des entités exposées directement.
+  - **Solution** : écrire explicitement les constructeurs, accesseurs et méthodes métier ; fournir un constructeur sans argument compatible JPA, éviter `toString` sur les relations et ne jamais exposer une entité comme DTO.
+
+### Étape 2 — MySQL, Flyway et Hibernate
+
+- **Vulnérabilité — schéma non maîtrisé** : `ddl-auto=create/update` ou H2 masquerait les divergences entre le développement et MySQL.
+  - **Solution** : MySQL uniquement, aucun artefact H2, Flyway comme seul outil de création/modification et `spring.jpa.hibernate.ddl-auto=validate`.
+- **Vulnérabilité — écart Flyway/JPA** : avec `validate`, toute différence de nom, type, nullabilité ou relation fait échouer le démarrage.
+  - **Solution** : déclarer explicitement `@Table`, `@Column` et `@JoinColumn`, puis tester sur une base MySQL vide l'ordre Flyway puis validation Hibernate.
+- **Vulnérabilité — modèle mal dénombré** : le modèle contient six entités JPA et `Adresse`, qui est un objet de valeur.
+  - **Solution** : créer exactement six `@Entity` (`Artiste`, `Salle`, `Concert`, `Client`, `CarteFidelite`, `AchatBillets`) et `Adresse` en `@Embeddable`, sans table dédiée.
+- **Vulnérabilité — types SQL implicites** : les conversions automatiques peuvent diverger pour les prix, dates, enums, longueurs et colonnes obligatoires.
+  - **Solution** : aligner explicitement `BigDecimal` sur `DECIMAL(10,2)`, `LocalDateTime` sur `DATETIME`, les longueurs, enums, `NOT NULL`, index et clés étrangères dans les annotations et `V1__init_schema.sql`.
+- **Vulnérabilité — concurrence sur les contraintes métier** : un contrôle préalable en Java ne protège pas deux requêtes simultanées.
+  - **Solution** : conserver les contraintes `UNIQUE`, `CHECK` pertinentes et clés étrangères en base, appliquer une stratégie transactionnelle et convertir les violations d'intégrité en `409`.
+- **Vulnérabilité — dates dépendantes de la machine** : une date future peut devenir passée selon le fuseau ou l'horloge.
+  - **Solution** : utiliser UTC partout, injecter un `Clock` et une horloge fixe dans les tests ; la règle de date future reste vérifiée dans le service.
+
+### Étape 3 — Données initiales et erreurs
+
+- **Vulnérabilité — seed non reproductible** : des identifiants implicites, dates passées ou insertions dans le mauvais ordre rendent `V2__seed_data.sql` dépendante de l'état de la base.
+  - **Solution** : valeurs déterministes, ordre des clés étrangères respecté, dates futures contrôlées et exécution de `V1` puis `V2` sur une base MySQL vide.
+- **Vulnérabilité — fuite d'informations techniques** : une exception SQL, une stacktrace ou un message Hibernate renvoyé au client révèle la structure interne.
+  - **Solution** : mapper explicitement les erreurs vers le DTO JSON strict, journaliser les détails uniquement côté serveur et ne jamais les inclure dans la réponse.
+- **Vulnérabilité — erreurs de sécurité hors contrat JSON** : `401` et `403` ne passent pas automatiquement par le `@RestControllerAdvice`.
+  - **Solution** : configurer un `AuthenticationEntryPoint` et un `AccessDeniedHandler` produisant exactement le même JSON d'erreur.
+
+### Étape 4 — Spring Security
+
+- **Vulnérabilité — confusion rôle/autorité** : `hasRole("ADMIN")` et `hasAuthority("ROLE_ADMIN")` n'ont pas le même contrat et peuvent autoriser la mauvaise route.
+  - **Solution** : adopter une convention unique `ROLE_CLIENT`, `ROLE_PRODUCTEUR`, `ROLE_ADMIN` et tester chaque route en anonyme, rôle insuffisant et rôle autorisé.
+- **Vulnérabilité — matcher trop large ou mal ordonné** : un pattern générique placé avant une règle spécifique peut rendre une opération protégée publique.
+  - **Solution** : placer les règles spécifiques avant les patterns génériques, distinguer les méthodes HTTP et tester toutes les routes publiques/protégées.
+- **Vulnérabilité — mots de passe exposés** : des comptes de démonstration en clair dans le code ou la configuration peuvent être réutilisés.
+  - **Solution** : injecter les identifiants par variables d'environnement/profil de test et ne conserver que des valeurs BCrypt.
+
+### Étape 5 — Testcontainers MySQL et Maven/CI
+
+- **Vulnérabilité — Docker indisponible** : Testcontainers échoue si Docker Desktop ou le daemon CI n'est pas accessible.
+  - **Solution** : documenter Docker comme prérequis, utiliser un runner CI compatible Docker, vérifier le démarrage d'un conteneur avant `mvn test` et ne prévoir aucun fallback H2.
+- **Vulnérabilité — datasource hors conteneur** : l'application peut utiliser une URL MySQL locale au lieu des propriétés du conteneur.
+  - **Solution** : utiliser `@ServiceConnection` si supporté par Spring Boot 4.1.1, sinon `@DynamicPropertySource`, mais jamais les deux pour la même datasource.
+- **Vulnérabilité — tests dépendants de la machine** : ports fixes, démarrages manuels par test ou mode Testcontainers `reuse` créent des courses et des échecs non reproductibles.
+  - **Solution** : fixer la même image MySQL en local et en CI, utiliser des ports aléatoires, un cycle de vie JUnit Jupiter partagé et ne pas dépendre de `reuse`.
+- **Vulnérabilité — tests JUnit ignorés** : une mauvaise configuration Surefire peut ne pas détecter les tests JUnit 5.
+  - **Solution** : vérifier la détection avec `mvn test`, laisser le parent gérer Surefire lorsque possible et réserver Failsafe aux tests réellement séparés.
+- [ ] Ajouter un test de démarrage sur MySQL vide vérifiant explicitement Flyway puis `ddl-auto=validate`.
+- [ ] Vérifier que la même image MySQL et les mêmes versions Maven sont utilisées en local et en CI.
+- [ ] Vérifier que Docker est disponible avant l'exécution de la suite.
+
+### Étape 6 — Validation avant partage du socle
+
+- **Vulnérabilité — partage prématuré** : une divergence de schéma, de sécurité ou de format d'erreur découverte après le travail en parallèle coûte cher à corriger.
+  - **Solution** : ne partager le socle qu'après `mvn clean test` complet sur Testcontainers MySQL, validation des réponses `400/401/403/404/409`, contrôle des secrets et confirmation JDK 25.
+- [ ] Vérifier que les six entités et `Adresse @Embeddable` correspondent exactement à Flyway.
+- [ ] Vérifier que les handlers MVC et Security produisent le même format JSON strict.
+- [ ] Vérifier que le build utilise `maven.compiler.release=25`.

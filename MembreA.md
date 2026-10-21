@@ -200,12 +200,12 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 10. Configurer Actuator et OpenAPI
 
-- [ ] Exposer publiquement uniquement `/actuator/health`.
-- [ ] Ne pas exposer les autres endpoints Actuator.
-- [ ] Autoriser publiquement `/v3/api-docs`, `/v3/api-docs/**`, `/swagger-ui.html` et `/swagger-ui/**`.
-- [ ] Ajouter les métadonnées OpenAPI de base.
-- [ ] Vérifier la documentation des DTO records.
-- [ ] Vérifier que Swagger respecte les règles de sécurité.
+- [x] Exposer publiquement uniquement `/actuator/health`.
+- [x] Ne pas exposer les autres endpoints Actuator.
+- [x] Autoriser publiquement `/v3/api-docs`, `/v3/api-docs/**`, `/swagger-ui.html` et `/swagger-ui/**`.
+- [x] Ajouter les métadonnées OpenAPI de base.
+- [x] Vérifier la documentation des DTO records.
+- [x] Vérifier que Swagger respecte les règles de sécurité.
 
 ### 11. Ajouter les tests du périmètre
 
@@ -384,3 +384,4 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - Le calcul des places restantes est effectué dans `ConcertService` à partir de la capacité de la salle et de `AchatBilletsRepository.sommeQuantiteVendueParConcert`; la transaction de lecture est distincte du futur flux transactionnel d'achat.
 - Le `GlobalExceptionHandler` ne couvre pas les réponses `401 Unauthorized` et `403 Forbidden` générées avant l'appel d'un contrôleur. Un `AuthenticationEntryPoint` et un `AccessDeniedHandler` devront produire le même format `ErrorResponse` lors de l'Étape 9 Spring Security.
 - Les comptes HTTP Basic sont des comptes de démonstration en mémoire et utilisent tous le mot de passe `password`, encodé par BCrypt à chaque démarrage. Cette valeur est exclusivement destinée au développement et aux tests ; elle devra être externalisée ou remplacée avant toute utilisation hors environnement de démonstration.
+- La configuration OpenAPI déclare le schéma HTTP Basic globalement. Les records Java utilisés comme DTO sont compatibles avec le scanner Springdoc ; leur documentation détaillée devra être vérifiée avec `/v3/api-docs` lors d'un démarrage de l'application, car aucune route OpenAPI automatisée n'est exécutée par `mvn test` à ce stade.

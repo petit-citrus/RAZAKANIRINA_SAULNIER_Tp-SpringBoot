@@ -19,3 +19,8 @@ spring:
   jackson:
     time-zone: UTC
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

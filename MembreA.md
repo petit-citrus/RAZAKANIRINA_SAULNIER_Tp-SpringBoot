@@ -141,25 +141,25 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 7. Implémenter le domaine Catalogue et Production
 
-- [ ] Créer les DTO records d'artistes.
-- [ ] Créer le service de création d'artiste.
-- [ ] Détecter les doublons d'artistes.
-- [ ] Créer les DTO records de salles.
-- [ ] Créer le service de création de salle.
-- [ ] Contrôler l'unicité du couple nom/ville.
-- [ ] Créer les DTO records de concerts.
-- [ ] Créer le service de création de concert.
-- [ ] Vérifier l'existence de l'artiste et de la salle.
-- [ ] Vérifier la date future et le prix positif.
-- [ ] Implémenter les endpoints :
-  - [ ] `GET /api/concerts?du=&au=&artiste=`.
-  - [ ] `GET /api/concerts/{id}`.
-  - [ ] `POST /api/production/artistes`.
-  - [ ] `POST /api/production/concerts`.
-  - [ ] `POST /api/admin/salles`.
-- [ ] Retourner `201 Created` avec un en-tête `Location` pour les créations.
-- [ ] Retourner le nombre de places restantes dans le détail d'un concert.
-- [ ] Garder les contrôleurs fins et déléguer la logique aux services.
+- [x] Créer les DTO records d'artistes.
+- [x] Créer le service de création d'artiste.
+- [x] Détecter les doublons d'artistes.
+- [x] Créer les DTO records de salles.
+- [x] Créer le service de création de salle.
+- [x] Contrôler l'unicité du couple nom/ville.
+- [x] Créer les DTO records de concerts.
+- [x] Créer le service de création de concert.
+- [x] Vérifier l'existence de l'artiste et de la salle.
+- [x] Vérifier la date future et le prix positif.
+- [x] Implémenter les endpoints :
+  - [x] `GET /api/concerts?du=&au=&artiste=`.
+  - [x] `GET /api/concerts/{id}`.
+  - [x] `POST /api/production/artistes`.
+  - [x] `POST /api/production/concerts`.
+  - [x] `POST /api/admin/salles`.
+- [x] Retourner `201 Created` avec un en-tête `Location` pour les créations.
+- [x] Retourner le nombre de places restantes dans le détail d'un concert.
+- [x] Garder les contrôleurs fins et déléguer la logique aux services.
 
 ### 8. Implémenter la gestion globale des erreurs
 
@@ -380,3 +380,5 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - La migration utilise les contraintes `CHECK` natives MySQL ; l'environnement de validation devra utiliser une version MySQL qui les applique effectivement (MySQL 8.0.16 ou supérieure).
 - La requête multicritère de `ConcertRepository` traite les filtres absents avec `:param IS NULL`. Elle devra être couverte par des tests avec chaque combinaison de paramètres afin de vérifier le comportement attendu lorsque `du`, `au` ou `artisteId` est absent.
 - La compilation `mvn test` valide les interfaces et la syntaxe JPQL, mais ne valide pas encore l'exécution de V2 ni le verrou pessimiste sur MySQL ; ces points restent à confirmer par Testcontainers.
+- Les exceptions métier utilisées par l'Étape 7 sont `com.campus.common.error.BusinessConflictException` pour les doublons d'artistes et de salles, et `com.campus.common.error.ResourceNotFoundException` pour un artiste, une salle ou un concert inexistant. L'Étape 8 devra les mapper respectivement en `409` et `404` dans le `ControllerAdvice`.
+- Le calcul des places restantes est effectué dans `ConcertService` à partir de la capacité de la salle et de `AchatBilletsRepository.sommeQuantiteVendueParConcert`; la transaction de lecture est distincte du futur flux transactionnel d'achat.

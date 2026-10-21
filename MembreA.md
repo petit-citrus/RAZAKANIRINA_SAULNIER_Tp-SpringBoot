@@ -41,15 +41,15 @@ Le dépôt est actuellement un squelette Java :
 
 ### 2. Créer la configuration applicative de base
 
-- [ ] Ajouter `src/main/resources/application.yml` ou `application.properties`.
-- [ ] Configurer MySQL comme seule base de données.
-- [ ] Configurer la datasource par variables d'environnement.
-- [ ] Configurer `spring.jpa.hibernate.ddl-auto=validate`.
-- [ ] Activer Flyway au démarrage.
-- [ ] Configurer les dates en UTC.
-- [ ] Fournir un bean `java.time.Clock`, par défaut avec `Clock.systemUTC()`.
+- [x] Ajouter `src/main/resources/application.yml` ou `application.properties`.
+- [x] Configurer MySQL comme seule base de données.
+- [x] Configurer la datasource par variables d'environnement.
+- [x] Configurer `spring.jpa.hibernate.ddl-auto=validate`.
+- [x] Activer Flyway au démarrage.
+- [x] Configurer les dates en UTC.
+- [x] Fournir un bean `java.time.Clock`, par défaut avec `Clock.systemUTC()`.
 - [ ] Prévoir une horloge fixe injectable dans les tests.
-- [ ] Ne jamais ajouter H2.
+- [x] Ne jamais ajouter H2.
 
 ### 3. Définir la structure de packages
 
@@ -373,3 +373,7 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - [ ] Vérifier que les six entités et `Adresse @Embeddable` correspondent exactement à Flyway.
 - [ ] Vérifier que les handlers MVC et Security produisent le même format JSON strict.
 - [ ] Vérifier que le build utilise `maven.compiler.release=25`.
+
+### ⚠️ Problèmes rencontrés
+
+- L'horloge fixe injectable n'est pas ajoutée à cette étape : elle appartient à la configuration des tests et sera fournie lors de l'implémentation de la suite de tests. Le code applicatif utilise dès maintenant le bean partagé `Clock.systemUTC()` afin de respecter le contrat UTC sans rendre les tests dépendants de l'heure système.

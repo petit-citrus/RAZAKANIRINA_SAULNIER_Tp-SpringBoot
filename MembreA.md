@@ -117,25 +117,25 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 5. Ajouter les données initiales
 
-- [ ] Créer `V2__seed_data.sql`.
-- [ ] Insérer deux artistes.
-- [ ] Insérer deux salles.
-- [ ] Insérer trois concerts.
-- [ ] Insérer deux clients.
-- [ ] Utiliser des dates de concerts futures.
-- [ ] Respecter l'ordre des clés étrangères.
+- [x] Créer `V2__seed_data.sql`.
+- [x] Insérer deux artistes.
+- [x] Insérer deux salles.
+- [x] Insérer trois concerts.
+- [x] Insérer deux clients.
+- [x] Utiliser des dates de concerts futures.
+- [x] Respecter l'ordre des clés étrangères.
 - [ ] Vérifier l'exécution complète des migrations sur une base MySQL vide.
 
 ### 6. Mettre en place les repositories
 
-- [ ] Créer les repositories Spring Data JPA.
-- [ ] Ajouter la recherche des concerts par date minimale `du`.
-- [ ] Ajouter la recherche par date maximale `au`.
-- [ ] Ajouter la recherche par artiste.
-- [ ] Définir le comportement lorsque les filtres sont absents.
-- [ ] Ajouter une requête d'agrégation pour la somme des quantités achetées par concert.
+- [x] Créer les repositories Spring Data JPA.
+- [x] Ajouter la recherche des concerts par date minimale `du`.
+- [x] Ajouter la recherche par date maximale `au`.
+- [x] Ajouter la recherche par artiste.
+- [x] Définir le comportement lorsque les filtres sont absents.
+- [x] Ajouter une requête d'agrégation pour la somme des quantités achetées par concert.
 - [ ] Prévoir le calcul des places restantes à partir de la capacité et des billets vendus.
-- [ ] Ajouter une lecture pessimiste verrouillée du concert avant tout achat.
+- [x] Ajouter une lecture pessimiste verrouillée du concert avant tout achat.
 - [ ] Garantir que le calcul des billets vendus est exécuté dans la même transaction que l'achat.
 - [ ] Tester ces requêtes avec Testcontainers MySQL.
 
@@ -378,7 +378,5 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 
 - La compilation `mvn test` confirme la cohérence Java des neuf classes et l'inclusion de la migration, mais aucune base MySQL/Testcontainers n'est encore configurée pour cette étape. La validation effective de `ddl-auto=validate`, l'exécution de `V1__init_schema.sql` et le support des contraintes `CHECK` restent donc à confirmer lors du prochain test d'intégration MySQL.
 - La migration utilise les contraintes `CHECK` natives MySQL ; l'environnement de validation devra utiliser une version MySQL qui les applique effectivement (MySQL 8.0.16 ou supérieure).
-
-### ⚠️ Problèmes rencontrés
-
-- L'horloge fixe injectable n'est pas ajoutée à cette étape : elle appartient à la configuration des tests et sera fournie lors de l'implémentation de la suite de tests. Le code applicatif utilise dès maintenant le bean partagé `Clock.systemUTC()` afin de respecter le contrat UTC sans rendre les tests dépendants de l'heure système.
+- La requête multicritère de `ConcertRepository` traite les filtres absents avec `:param IS NULL`. Elle devra être couverte par des tests avec chaque combinaison de paramètres afin de vérifier le comportement attendu lorsque `du`, `au` ou `artisteId` est absent.
+- La compilation `mvn test` valide les interfaces et la syntaxe JPQL, mais ne valide pas encore l'exécution de V2 ni le verrou pessimiste sur MySQL ; ces points restent à confirmer par Testcontainers.

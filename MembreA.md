@@ -48,7 +48,7 @@ Le dépôt est actuellement un squelette Java :
 - [x] Activer Flyway au démarrage.
 - [x] Configurer les dates en UTC.
 - [x] Fournir un bean `java.time.Clock`, par défaut avec `Clock.systemUTC()`.
-- [ ] Prévoir une horloge fixe injectable dans les tests.
+- [x] Prévoir une horloge fixe injectable dans les tests.
 - [x] Ne jamais ajouter H2.
 
 ### 3. Définir la structure de packages
@@ -209,32 +209,32 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 11. Ajouter les tests du périmètre
 
-- [ ] Tests JPA :
-  - [ ] Recherche filtrée des concerts.
-  - [ ] Filtre par artiste.
-  - [ ] Filtre par intervalle de dates.
-  - [ ] Somme des billets vendus.
+- [x] Tests JPA avec Testcontainers MySQL :
+  - [x] Recherche filtrée des concerts.
+  - [x] Filtre par artiste.
+  - [x] Filtre par intervalle de dates.
+  - [x] Somme des billets vendus.
   - [ ] Calcul des places restantes.
-- [ ] Tests MVC :
+- [x] Tests MVC :
   - [ ] Création d'artiste valide.
-  - [ ] Validation invalide en `400`.
-  - [ ] Doublon en `409`.
-  - [ ] Concert inexistant en `404`.
-  - [ ] Salle dupliquée en `409`.
-- [ ] Tests de sécurité :
-  - [ ] Anonyme sur route protégée en `401`.
-  - [ ] `CLIENT` sur création de salle en `403`.
+  - [x] Validation invalide en `400`.
+  - [x] Doublon en `409`.
+  - [x] Concert inexistant en `404`.
+  - [x] Salle dupliquée en `409`.
+- [x] Tests de sécurité :
+  - [x] Anonyme sur route protégée en `401`.
+  - [x] `CLIENT` sur création de salle en `403`.
   - [ ] `PRODUCTEUR` autorisé à créer un artiste et un concert.
   - [ ] `ADMIN` autorisé à créer une salle.
   - [ ] `CLIENT` autorisé à créer un achat.
-- [ ] Tests d'intégration Testcontainers MySQL :
-  - [ ] Démarrage complet de l'application.
-  - [ ] Application de `V1__init_schema.sql`.
-  - [ ] Application de `V2__seed_data.sql`.
-  - [ ] Contraintes d'unicité.
+- [x] Tests d'intégration Testcontainers MySQL :
+  - [x] Démarrage complet de l'application.
+  - [x] Application de `V1__init_schema.sql`.
+  - [x] Application de `V2__seed_data.sql`.
+  - [x] Contraintes d'unicité.
   - [ ] Contraintes de clés étrangères.
   - [ ] Validation de `ddl-auto=validate`.
-- [ ] Vérifier qu'aucun test n'utilise H2.
+- [x] Vérifier qu'aucun test n'utilise H2.
 
 ### 12. Validation finale avant partage
 
@@ -385,3 +385,6 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - Le `GlobalExceptionHandler` ne couvre pas les réponses `401 Unauthorized` et `403 Forbidden` générées avant l'appel d'un contrôleur. Un `AuthenticationEntryPoint` et un `AccessDeniedHandler` devront produire le même format `ErrorResponse` lors de l'Étape 9 Spring Security.
 - Les comptes HTTP Basic sont des comptes de démonstration en mémoire et utilisent tous le mot de passe `password`, encodé par BCrypt à chaque démarrage. Cette valeur est exclusivement destinée au développement et aux tests ; elle devra être externalisée ou remplacée avant toute utilisation hors environnement de démonstration.
 - La configuration OpenAPI déclare le schéma HTTP Basic globalement. Les records Java utilisés comme DTO sont compatibles avec le scanner Springdoc ; leur documentation détaillée devra être vérifiée avec `/v3/api-docs` lors d'un démarrage de l'application, car aucune route OpenAPI automatisée n'est exécutée par `mvn test` à ce stade.
+- La configuration `FixedClockTestConfiguration` fournit désormais un bean `@Primary` basé sur `Clock.fixed(Instant.parse("2026-01-15T12:00:00Z"), ZoneOffset.UTC)`. Les tests MVC utilisent cette horloge pour rendre les timestamps d'erreur déterministes ; le bean `Clock.systemUTC()` reste utilisé en production.
+- Avec Spring Boot 4, les annotations de slice utilisent `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest` et `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest`, et non les anciens packages Spring Boot 3.
+- Les 5 tests MVC/Security ciblés passent. Les tests JPA et le test d'intégration compilent mais leur exécution est bloquée localement par l'absence d'un environnement Docker valide pour Testcontainers ; ils devront être rejoués avec Docker Desktop ou un daemon CI disponible.

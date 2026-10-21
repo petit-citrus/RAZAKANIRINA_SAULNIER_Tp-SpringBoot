@@ -117,12 +117,12 @@ Le backend de billetterie est pleinement fonctionnel et valide le contrat exigé
 
 ## Bilan et conclusion
 Ce projet a mis en évidence l'importance d'une conception rigoureuse (contrats d'interfaces, DTOs, gestion centralisée des erreurs) et d'une organisation Git propre en équipe. La séparation stricte du travail via des contrats inter-domaines a permis d'éviter les conflits majeurs, le Membre A fournissant le socle et le Membre B construisant la logique d'achat par-dessus. L'utilisation de l'IA comme un outil (et non un dirigeant) s'est révélée être nécessaire pour la quantité de travail et le peu de temps disponible.
-## Comment on est arrivé au résultat ? Architecture pro ? : MVC
+## Comment on est arrivé au résultat :
 L'architecture a été conçue pour être professionnelle et robuste. Nous avons appliqué le modèle MVC/N-Tiers de manière stricte :
 - **Contrôleurs :** Ne contiennent aucune logique métier. Ils ne font que réceptionner les requêtes HTTP, valider les DTO d'entrée, appeler les services et retourner les DTO de sortie avec les bons codes HTTP.
 - **Services :** Concentrent toute la logique métier, délimitent les transactions (`@Transactional`), gèrent les verrous de base de données et manipulent les données.
 - **Repositories :** Gèrent l'accès exclusif aux données via Spring Data JPA.
   De plus, la centralisation des erreurs via un `@RestControllerAdvice` assure un contrat API (JSON) uniforme pour les clients de l'API.
 
-## Prompt ? Erreur ? Modèle IA : Copilot Github ?
+## Modèle IA : Copilot Github ?
 L'usage de GitHub Copilot a été piloté par des prompts directifs. Au lieu de demander du code brut, nous avons forcé l'IA à adopter un rôle d'assistant soumis à des contraintes fortes ("Aucun Lombok", "H2 interdit", "Format JSON strict", "Ne pas exposer les entités JPA"). Les erreurs générées par l'IA (comme l'oubli des contraintes Jackson 3 ou des lacunes dans la logique métier) ont été corrigées grâce à une phase de compilation systématique, à l'analyse manuelle des logs Maven et à la relecture critique du code proposé.

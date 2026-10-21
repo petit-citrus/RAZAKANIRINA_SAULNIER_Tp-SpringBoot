@@ -163,19 +163,19 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 
 ### 8. Implémenter la gestion globale des erreurs
 
-- [ ] Créer un DTO record d'erreur contenant exactement :
-  - [ ] `timestamp`.
-  - [ ] `status`.
-  - [ ] `code`.
-  - [ ] `message`.
-  - [ ] `path`.
-- [ ] Créer un `@RestControllerAdvice`.
-- [ ] Retourner `400` pour les erreurs de validation.
-- [ ] Retourner `404` pour les ressources inexistantes.
-- [ ] Retourner `409` pour les doublons, conflits métier et problèmes de jauge.
-- [ ] Utiliser le `Clock` configuré pour produire le timestamp.
-- [ ] Utiliser le chemin réel de la requête.
-- [ ] Ne jamais exposer de stacktrace, de détail SQL ou de message technique.
+- [x] Créer un DTO record d'erreur contenant exactement :
+  - [x] `timestamp`.
+  - [x] `status`.
+  - [x] `code`.
+  - [x] `message`.
+  - [x] `path`.
+- [x] Créer un `@RestControllerAdvice`.
+- [x] Retourner `400` pour les erreurs de validation.
+- [x] Retourner `404` pour les ressources inexistantes.
+- [x] Retourner `409` pour les doublons, conflits métier et problèmes de jauge.
+- [x] Utiliser le `Clock` configuré pour produire le timestamp.
+- [x] Utiliser le chemin réel de la requête.
+- [x] Ne jamais exposer de stacktrace, de détail SQL ou de message technique.
 - [ ] Ajouter des tests MVC sur la structure JSON exacte.
 
 ### 9. Configurer Spring Security
@@ -382,3 +382,4 @@ Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Clie
 - La compilation `mvn test` valide les interfaces et la syntaxe JPQL, mais ne valide pas encore l'exécution de V2 ni le verrou pessimiste sur MySQL ; ces points restent à confirmer par Testcontainers.
 - Les exceptions métier utilisées par l'Étape 7 sont `com.campus.common.error.BusinessConflictException` pour les doublons d'artistes et de salles, et `com.campus.common.error.ResourceNotFoundException` pour un artiste, une salle ou un concert inexistant. L'Étape 8 devra les mapper respectivement en `409` et `404` dans le `ControllerAdvice`.
 - Le calcul des places restantes est effectué dans `ConcertService` à partir de la capacité de la salle et de `AchatBilletsRepository.sommeQuantiteVendueParConcert`; la transaction de lecture est distincte du futur flux transactionnel d'achat.
+- Le `GlobalExceptionHandler` ne couvre pas les réponses `401 Unauthorized` et `403 Forbidden` générées avant l'appel d'un contrôleur. Un `AuthenticationEntryPoint` et un `AccessDeniedHandler` devront produire le même format `ErrorResponse` lors de l'Étape 9 Spring Security.

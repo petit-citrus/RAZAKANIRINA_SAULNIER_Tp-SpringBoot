@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.campus.achat.AchatBillets;
 import com.campus.achat.AchatBilletsRepository;
@@ -51,7 +52,7 @@ public class AchatService {
         this.clock = clock;
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public AchatResponse creer(
             AchatRequest request,
             Authentication authentication) {

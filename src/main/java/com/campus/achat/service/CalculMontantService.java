@@ -2,7 +2,9 @@ package com.campus.achat.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CalculMontantService {
 
     private static final BigDecimal TAUX_REMISE_ACTIVE = new BigDecimal("0.10");

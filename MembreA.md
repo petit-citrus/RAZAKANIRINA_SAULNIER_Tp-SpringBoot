@@ -14,30 +14,30 @@ Le dépôt est actuellement un squelette Java :
 
 ### 1. Mettre en place le socle Maven Spring Boot
 
-- [ ] Remplacer le `pom.xml` minimal par un projet basé sur `spring-boot-starter-parent` en version `4.1.1`.
-- [ ] Définir `<maven.compiler.release>25</maven.compiler.release>`.
-- [ ] Ne pas redéfinir les versions gérées par Spring Boot.
-- [ ] Définir uniquement la version `3.1.1` pour `springdoc-openapi-starter-webmvc-ui`.
-- [ ] Ajouter les dépendances applicatives :
-  - [ ] `spring-boot-starter-webmvc`.
-  - [ ] `spring-boot-starter-data-jpa`.
-  - [ ] `spring-boot-starter-validation`.
-  - [ ] `spring-boot-starter-security`.
-  - [ ] `spring-boot-starter-flyway`.
-  - [ ] `flyway-mysql` en runtime.
-  - [ ] `mysql-connector-j` en runtime.
-  - [ ] `spring-boot-starter-actuator`.
-  - [ ] `springdoc-openapi-starter-webmvc-ui:3.1.1`.
-- [ ] Ajouter les dépendances de test :
-  - [ ] `spring-boot-starter-test`.
-  - [ ] `spring-boot-starter-webmvc-test`.
-  - [ ] `spring-boot-starter-data-jpa-test`.
-  - [ ] `spring-boot-starter-security-test`.
-  - [ ] `spring-boot-testcontainers`.
-  - [ ] `testcontainers-mysql`.
-  - [ ] `testcontainers-junit-jupiter`.
-- [ ] Remplacer `Main` par une classe principale Spring Boot avec `main(String[] args)`.
-- [ ] Vérifier le socle avec `mvn validate`, puis `mvn test`.
+- [x] Remplacer le `pom.xml` minimal par un projet basé sur `spring-boot-starter-parent` en version `4.1.1`.
+- [x] Définir `<maven.compiler.release>25</maven.compiler.release>`.
+- [x] Ne pas redéfinir les versions gérées par Spring Boot.
+- [x] Définir uniquement la version `3.1.1` pour `springdoc-openapi-starter-webmvc-ui`.
+- [x] Ajouter les dépendances applicatives :
+  - [x] `spring-boot-starter-webmvc`.
+  - [x] `spring-boot-starter-data-jpa`.
+  - [x] `spring-boot-starter-validation`.
+  - [x] `spring-boot-starter-security`.
+  - [x] `spring-boot-starter-flyway`.
+  - [x] `flyway-mysql` en runtime.
+  - [x] `mysql-connector-j` en runtime.
+  - [x] `spring-boot-starter-actuator`.
+  - [x] `springdoc-openapi-starter-webmvc-ui:3.1.1`.
+- [x] Ajouter les dépendances de test :
+  - [x] `spring-boot-starter-test`.
+  - [x] `spring-boot-starter-webmvc-test`.
+  - [x] `spring-boot-starter-data-jpa-test`.
+  - [x] `spring-boot-starter-security-test`.
+  - [x] `spring-boot-testcontainers`.
+  - [x] `testcontainers-mysql`.
+  - [x] `testcontainers-junit-jupiter`.
+- [x] Remplacer `Main` par une classe principale Spring Boot avec `main(String[] args)`.
+- [x] Vérifier le socle avec `mvn validate`, puis `mvn test`.
 
 ### 2. Créer la configuration applicative de base
 
@@ -63,6 +63,14 @@ Le dépôt est actuellement un squelette Java :
   - [ ] `client`.
   - [ ] `fidelite`.
   - [ ] `achat`.
+- [ ] Respecter les packages d'entités validés :
+  - [ ] `com.campus.catalogue.artiste.Artiste`.
+  - [ ] `com.campus.catalogue.salle.Salle`.
+  - [ ] `com.campus.catalogue.concert.Concert`.
+  - [ ] `com.campus.client.Client`.
+  - [ ] `com.campus.fidelite.CarteFidelite`.
+  - [ ] `com.campus.achat.AchatBillets`.
+  - [ ] `Adresse` dans `com.campus.client`, en `@Embeddable`.
 - [ ] Séparer entités JPA, DTO, repositories, services et contrôleurs.
 - [ ] Utiliser des records Java pour tous les DTO REST entrants et sortants.
 - [ ] Ne jamais exposer directement une entité JPA.
@@ -80,6 +88,7 @@ Le dépôt est actuellement un squelette Java :
   - [ ] Couple nom/ville d'une salle.
 - [ ] Utiliser `DECIMAL(10,2)` pour les prix et montants.
 - [ ] Utiliser des types SQL compatibles avec `LocalDateTime`.
+- [ ] Utiliser `Long` auto-incrémenté pour tous les identifiants d'entités.
 - [ ] Ajouter les contraintes de capacité, quantité et prix.
 - [ ] Créer les entités JPA :
   - [ ] `Artiste` : id, nom obligatoire et unique, genre musical.
@@ -126,6 +135,8 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 - [ ] Définir le comportement lorsque les filtres sont absents.
 - [ ] Ajouter une requête d'agrégation pour la somme des quantités achetées par concert.
 - [ ] Prévoir le calcul des places restantes à partir de la capacité et des billets vendus.
+- [ ] Ajouter une lecture pessimiste verrouillée du concert avant tout achat.
+- [ ] Garantir que le calcul des billets vendus est exécuté dans la même transaction que l'achat.
 - [ ] Tester ces requêtes avec Testcontainers MySQL.
 
 ### 7. Implémenter le domaine Catalogue et Production
@@ -238,6 +249,64 @@ Le **socle commun Entités + Flyway est terminé à la fin de l'étape 4**, lors
 - [ ] Partager la version fonctionnelle complète après validation des étapes 7 à 11.
 
 ## Garde-fous obligatoires — vulnérabilités et solutions préventives
+
+## Contrats techniques inter-domaines validés
+
+Ces contrats sont imposés pour éviter les divergences entre le Catalogue, Client, Fidélité et Achat.
+
+### Identifiants
+
+- **Choix** : tous les identifiants JPA sont de type `Long`, générés par la base avec `IDENTITY`/`AUTO_INCREMENT`.
+- **Raison** : le projet utilise MySQL, ne demande pas de génération distribuée et doit conserver des clés étrangères simples et lisibles.
+- **Règle** : aucun UUID ne doit être introduit pour les entités métier sans décision commune ; les DTO peuvent exposer le `Long` correspondant.
+
+### Dates et horloge
+
+- **Choix** : les dates métier persistées (`dateConcert`, `dateCreation`, `dateExpiration`) sont des `LocalDateTime`, stockées en `DATETIME` MySQL et interprétées en UTC.
+- **Règle** : `Instant` est réservé aux besoins explicitement liés à un instant absolu ou à l'observabilité ; il n'est pas utilisé pour les champs métier du modèle actuel.
+- **Clock partagé** : créer `com.campus.config.ClockConfiguration` avec un bean `Clock` singleton basé sur `Clock.systemUTC()`. Les services reçoivent ce bean par injection et n'appellent jamais directement `LocalDateTime.now()`.
+- **Tests** : remplacer le bean par une `Clock.fixed(...)` dans un contexte de test ou injecter une horloge de test dédiée ; les tests de date future et d'expiration doivent être déterministes.
+
+### Packages et noms des entités
+
+- **Choix** : conserver les six entités et les packages suivants :
+  - `com.campus.catalogue.artiste.Artiste`
+  - `com.campus.catalogue.salle.Salle`
+  - `com.campus.catalogue.concert.Concert`
+  - `com.campus.client.Client`
+  - `com.campus.fidelite.CarteFidelite`
+  - `com.campus.achat.AchatBillets`
+- `com.campus.client.Adresse` est uniquement un `@Embeddable`, sans identifiant ni table propre.
+- **Règle** : les DTO, repositories, services et contrôleurs restent dans le sous-package de leur domaine ; aucune entité JPA n'est renvoyée directement par l'API.
+
+### Exceptions métier et `ControllerAdvice`
+
+- **Choix** : les services lèvent des exceptions métier dédiées, sans retourner `null` pour signaler une erreur :
+  - `ResourceNotFoundException` pour une ressource absente, mappée en `404`.
+  - `BusinessConflictException` pour doublon, jauge insuffisante ou conflit métier, mappée en `409`.
+  - `InvalidBusinessStateException` pour une règle métier invalide non couverte par la validation d'entrée, mappée en `400`.
+- **Règle** : ces exceptions vivent dans `com.campus.common.error`; le `@RestControllerAdvice` centralise leur conversion dans le JSON strict `timestamp/status/code/message/path`.
+- Les violations Jakarta (`MethodArgumentNotValidException`, contraintes de paramètres) sont mappées en `400`, les violations d'unicité/intégrité attendues en `409`, et aucun détail SQL ou stacktrace ne sort de l'API.
+- Les erreurs HTTP Basic restent alignées sur ce contrat via `AuthenticationEntryPoint` (`401`) et `AccessDeniedHandler` (`403`).
+
+### Lien entre HTTP Basic et Client
+
+- **Choix** : le nom d'utilisateur HTTP Basic d'un compte client est son adresse email normalisée ; il correspond à `Client.email`.
+- **Règle** : l'entité `Client` ne stocke pas de mot de passe. Les comptes et hashes BCrypt sont gérés par la configuration de sécurité (ou un fournisseur d'identité ultérieur), et les secrets ne sont jamais versionnés.
+- Lorsqu'une route agit au nom d'un client, le service récupère l'utilisateur authentifié via `Authentication.getName()`, recherche le `Client` par email et vérifie que l'identifiant de ressource demandé lui appartient. Un compte `ADMIN` peut bénéficier des exceptions d'autorisation explicitement prévues.
+- Les comptes `PRODUCTEUR` et `ADMIN` ne sont pas liés à une entité `Client`. Les comptes de démonstration `CLIENT` utilisent des emails présents dans les données de test.
+
+### Lecture verrouillée du concert et billets vendus
+
+- **Choix** : `ConcertRepository` fournit une méthode `findByIdForUpdate(Long id)` annotée `@Lock(LockModeType.PESSIMISTIC_WRITE)` et exécutée dans une transaction de service.
+- **Contrat de concurrence** : le service d'achat ouvre une transaction, charge le concert avec ce verrou, calcule ensuite les places vendues, vérifie la jauge, puis persiste l'achat avant le commit. Tous les chemins de création d'achat doivent suivre ce flux.
+- **Requête de ventes** : `AchatBilletsRepository` fournit une agrégation typée équivalente à :
+  ```jpql
+  SELECT COALESCE(SUM(a.quantite), 0)
+  FROM AchatBillets a
+  WHERE a.concert.id = :concertId
+  ```
+- Le verrou doit être pris avant l'agrégation afin que deux achats concurrents d'un même concert ne valident pas simultanément une jauge dépassée. Les tests d'intégration MySQL vérifieront ce comportement.
 
 ### Étape 1 — Socle Maven, Java 25 et absence de Lombok
 
